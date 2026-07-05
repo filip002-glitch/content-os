@@ -104,13 +104,15 @@
 
 <div class="header">
   <div>
-    <div class="eyebrow">Vantage Strategic Systems</div>
-    <div class="title">CONTENT <span id="titleAccent">OS</span></div>
+    <div class="eyebrow">Distribution node</div>
+    <div class="title">CONTENT <span id="titleAccent">[ OS ]</span></div>
   </div>
   <div class="hbtns">
     <button class="btn ghost" id="backupBtn">⤓ BACKUP</button>
     <button class="btn ghost" id="restoreBtn">⤒ RESTORE</button>
+    <button class="btn ghost" id="importBtn">+ IMPORT</button>
     <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
   </div>
 </div>
 
@@ -307,16 +309,33 @@ async function doBackup(){
     toast("Backup downloaded");
   }catch(e){ toast("Backup failed"); }
 }
-async function doRestore(file){
+async function doRestore(file, mode){
+  // mode "replace": wipes everything and loads the file as the new full state (used for real backups)
+  // mode "merge": keeps existing posts and adds the file's posts alongside them (used for imports)
   try{
     const data = JSON.parse(await file.text());
     if(data.app !== "contentos" || !Array.isArray(data.posts)) throw 0;
-    // clear old images
-    for(const k of await kvKeys()){ if(String(k).startsWith("img:")) await kvDel(k); }
-    posts = data.posts;
-    for(const [id, url] of Object.entries(data.images || {})) await kvSet("img:" + id, url);
+
+    if(mode === "replace"){
+      for(const k of await kvKeys()){ if(String(k).startsWith("img:")) await kvDel(k); }
+      posts = data.posts;
+      for(const [id, url] of Object.entries(data.images || {})) await kvSet("img:" + id, url);
+    }else{
+      // merge: remap ids so nothing collides with what's already in the app
+      const idMap = {};
+      const incoming = data.posts.map(p => {
+        const newId2 = newId();
+        idMap[p.id] = newId2;
+        const pf = p.platform;
+        return { ...p, id: newId2, order: nextOrder(pf) + Math.random() };
+      });
+      for(const [oldId, url] of Object.entries(data.images || {})){
+        if(idMap[oldId]) await kvSet("img:" + idMap[oldId], url);
+      }
+      posts = posts.concat(incoming);
+    }
     await persist();
-    toast("Backup restored");
+    toast(mode === "replace" ? "Backup restored" : "Posts imported");
   }catch(e){ toast("That file isn't a valid backup"); }
   render();
 }
@@ -622,7 +641,13 @@ $("restoreBtn").onclick = () => $("restoreFile").click();
 $("restoreFile").onchange = e => {
   const f = e.target.files && e.target.files[0];
   e.target.value = "";
-  if(f) doRestore(f);
+  if(f) doRestore(f, "replace");
+};
+$("importBtn").onclick = () => $("importFile").click();
+$("importFile").onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(f) doRestore(f, "merge");
 };
 
 loadState().then(render);
