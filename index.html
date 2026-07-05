@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1116">
+<title>CONTENT [ OS ]</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#0E1116; --card:#161B22; --card2:#1C222B; --line:#252C36;
+    --text:#E8EAED; --mut:#8A93A0; --dim:#5C6572; --ok:#3DDC84; --danger:#E05555;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+  body{min-height:100vh; padding-bottom:96px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  button{font-family:inherit; cursor:pointer}
+  input,textarea{outline:none; font-family:inherit}
+  ::-webkit-scrollbar{display:none}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+
+  .header{padding:18px 16px 10px; display:flex; align-items:flex-end}
+  .eyebrow{font-family:ui-monospace,Menlo,monospace; font-size:10px; letter-spacing:3px;
+    color:var(--dim); text-transform:uppercase}
+  .title{font-size:24px; font-weight:800; letter-spacing:-.5px}
+  .hbtns{margin-left:auto; display:flex; gap:6px}
+
+  .chips{display:flex; gap:8px; overflow-x:auto; padding:4px 16px 12px}
+  .chip{flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 13px;
+    border-radius:999px; font-size:13px; font-weight:700; background:var(--card);
+    color:var(--mut); border:1px solid var(--line)}
+  .chip.small{padding:6px 10px; font-size:12px}
+  .chip .cnt{font-family:ui-monospace,Menlo,monospace; font-size:10px; background:var(--card2);
+    color:var(--dim); border-radius:999px; padding:1px 6px}
+
+  .toolbar{display:flex; align-items:center; justify-content:space-between; padding:0 16px 10px}
+  .count{font-family:ui-monospace,Menlo,monospace; font-size:11px; color:var(--mut)}
+
+  .btn{padding:7px 11px; border-radius:9px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); font-size:12px; font-weight:600}
+  .btn.ghost{background:transparent; color:var(--dim)}
+  .btn.mut{color:var(--mut)}
+  .btn.danger{background:transparent; color:var(--danger)}
+
+  .list{padding:0 16px; display:flex; flex-direction:column; gap:10px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:12px; animation:fadeUp .18s ease; cursor:pointer}
+  .card.posted{opacity:.55}
+  .card .top{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+  .pfshort{font-family:ui-monospace,Menlo,monospace; font-size:10px; font-weight:700; letter-spacing:1.5px}
+  .ord{font-family:ui-monospace,Menlo,monospace; font-size:10px; color:var(--dim)}
+  .when{font-family:ui-monospace,Menlo,monospace; font-size:11px; color:var(--mut)}
+  .when.q{color:var(--dim)}
+  .chk{width:26px; height:26px; border-radius:8px; border:1.5px solid var(--dim);
+    background:transparent; color:var(--dim); font-size:14px; line-height:1; margin-left:auto}
+  .chk.on{border-color:var(--ok); background:rgba(61,220,132,.13); color:var(--ok)}
+  .body{display:flex; gap:10px}
+  .thumb{width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;
+    border:1px solid var(--line)}
+  .ptitle{font-weight:700; font-size:14px; margin-bottom:2px}
+  .card.posted .ptitle{text-decoration:line-through}
+  .pcap{font-size:12.5px; color:var(--mut); white-space:pre-wrap; overflow:hidden;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical}
+  .pcap .none{color:var(--dim)}
+  .actions{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; align-items:center}
+  .spacer{flex:1}
+
+  .empty{text-align:center; padding:56px 32px; color:var(--mut)}
+  .empty .glyph{font-size:30px; margin-bottom:10px}
+  .empty .sub{font-size:12px; color:var(--dim); margin-top:4px}
+
+  .fab{position:fixed; right:18px; bottom:20px; width:56px; height:56px; border-radius:18px;
+    border:none; color:#0B0E12; font-size:28px; font-weight:700; z-index:40}
+
+  .toast{position:fixed; bottom:88px; left:50%; transform:translateX(-50%);
+    background:var(--card2); border:1px solid var(--line); color:var(--text);
+    padding:8px 16px; border-radius:10px; font-size:12.5px;
+    font-family:ui-monospace,Menlo,monospace; white-space:nowrap; z-index:60}
+
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.67); z-index:50;
+    display:flex; align-items:flex-end}
+  .sheet{background:#12161D; width:100%; max-height:88vh; overflow-y:auto;
+    border-radius:18px 18px 0 0; padding:16px 16px 26px; border-top:1px solid var(--line);
+    animation:fadeUp .2s ease}
+  .sheet .shead{display:flex; align-items:center; margin-bottom:14px}
+  .sheet .stitle{font-size:16px; font-weight:800}
+  .label{font-family:ui-monospace,Menlo,monospace; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--dim); margin-bottom:6px}
+  .inp{width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    color:var(--text); padding:11px 12px; font-size:14px; margin-bottom:14px; color-scheme:dark}
+  .inp.tight{margin-bottom:8px}
+  .hint{font-family:ui-monospace,Menlo,monospace; font-size:10px; color:var(--dim)}
+  .row{display:flex; gap:8px}
+  .save{width:100%; padding:13px 0; border-radius:12px; border:none; color:#0B0E12;
+    font-weight:800; font-size:15px}
+  .bigbtn{flex:1; padding:12px 0; border-radius:12px; font-weight:800; font-size:14px; border:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="eyebrow">Distribution node</div>
+    <div class="title">CONTENT <span id="titleAccent">[ OS ]</span></div>
+  </div>
+  <div class="hbtns">
+    <button class="btn ghost" id="backupBtn">⤓ BACKUP</button>
+    <button class="btn ghost" id="restoreBtn">⤒ RESTORE</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+  </div>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<div class="toolbar">
+  <div class="count" id="count"></div>
+  <button class="btn ghost" id="hideBtn">HIDE POSTED</button>
+</div>
+
+<div id="listWrap"></div>
+
+<button class="fab" id="fab">+</button>
+<div id="modals"></div>
+<div id="toastWrap"></div>
+
+<script>
+// ---------------- Config ----------------
+const PLATFORMS = [
+  { id:"instagram", label:"Instagram", short:"IG",  color:"#E1306C" },
+  { id:"threads",   label:"Threads",   short:"TH",  color:"#9BA3B2" },
+  { id:"x",         label:"X",         short:"X",   color:"#E7E9EA" },
+  { id:"pinterest", label:"Pinterest", short:"PIN", color:"#E60023" },
+  { id:"tiktok",    label:"TikTok",    short:"TT",  color:"#25F4EE" },
+];
+const pById = id => PLATFORMS.find(p => p.id === id) || PLATFORMS[0];
+const DAYS = ["ne","po","ut","st","št","pi","so"];
+
+function fmtDate(dateStr, timeStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + "T" + (timeStr || "00:00"));
+  if(isNaN(d.getTime())) return dateStr;
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  return `${DAYS[d.getDay()]} ${dd}.${mm}.` + (timeStr ? ` ${timeStr}` : "");
+}
+const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// ---------------- IndexedDB storage (data lives on THIS device) ----------------
+const dbp = new Promise((res, rej) => {
+  const r = indexedDB.open("contentos", 1);
+  r.onupgradeneeded = () => r.result.createObjectStore("kv");
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+async function kvGet(k){ const db = await dbp; return new Promise((res,rej)=>{
+  const t = db.transaction("kv").objectStore("kv").get(k);
+  t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); }
+async function kvSet(k, v){ const db = await dbp; return new Promise((res,rej)=>{
+  const t = db.transaction("kv","readwrite").objectStore("kv").put(v, k);
+  t.onsuccess = () => res(); t.onerror = () => rej(t.error); }); }
+async function kvDel(k){ const db = await dbp; return new Promise((res,rej)=>{
+  const t = db.transaction("kv","readwrite").objectStore("kv").delete(k);
+  t.onsuccess = () => res(); t.onerror = () => rej(t.error); }); }
+async function kvKeys(){ const db = await dbp; return new Promise((res,rej)=>{
+  const t = db.transaction("kv").objectStore("kv").getAllKeys();
+  t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); }
+
+// ---------------- State ----------------
+let posts = [];
+let tab = "all";
+let hidePosted = false;
+let editing = null;   // draft object or null
+let dupFor = null;
+let deleting = null;
+let toastTimer = null;
+
+async function loadState(){
+  try{
+    posts = JSON.parse(await kvGet("posts:index") || "[]");
+    tab = (await kvGet("pref:tab")) || "all";
+    hidePosted = (await kvGet("pref:hidePosted")) === "1";
+  }catch(e){ posts = []; }
+}
+async function persist(){
+  try{ await kvSet("posts:index", JSON.stringify(posts)); }
+  catch(e){ toast("Saving failed — please try again"); }
+}
+
+// ---------------- Toast ----------------
+function toast(msg){
+  const w = document.getElementById("toastWrap");
+  w.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => w.innerHTML = "", 2200);
+}
+
+// ---------------- Image helpers ----------------
+function compressImage(file, maxDim = 1280, quality = 0.82){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          const s = maxDim / Math.max(w, h);
+          w = Math.round(w*s); h = Math.round(h*s);
+        }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        let q = quality, out = c.toDataURL("image/jpeg", q);
+        while(out.length > 4_000_000 && q > 0.4){ q -= 0.12; out = c.toDataURL("image/jpeg", q); }
+        resolve(out);
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function dataUrlToPngBlob(dataUrl){
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+  const c = document.createElement("canvas");
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  c.getContext("2d").drawImage(img, 0, 0);
+  return new Promise(res => c.toBlob(res, "image/png"));
+}
+
+// ---------------- Actions ----------------
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const nextOrder = pf => Math.max(0, ...posts.filter(p => p.platform === pf).map(p => p.order||0)) + 1;
+
+async function copyText(p){
+  try{ await navigator.clipboard.writeText(p.caption || p.title || ""); toast("Text copied"); }
+  catch(e){ toast("Copy blocked — select the text manually"); }
+}
+async function copyField(text, what){
+  try{ await navigator.clipboard.writeText(text || ""); toast(what + " copied"); }
+  catch(e){ toast("Copy blocked — select the text manually"); }
+}
+async function copyImage(p){
+  try{
+    const dataUrl = await kvGet("img:" + p.id);
+    if(!dataUrl) throw 0;
+    const blob = await dataUrlToPngBlob(dataUrl);
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    toast("Image copied");
+  }catch(e){ toast("Long-press the image to copy it manually"); }
+}
+async function togglePosted(p){
+  p.posted = !p.posted;
+  await persist(); render();
+}
+async function move(p, dir){
+  const list = posts.filter(x => x.platform === p.platform).sort((a,b)=>(a.order||0)-(b.order||0));
+  const i = list.findIndex(x => x.id === p.id), j = i + dir;
+  if(j < 0 || j >= list.length) return;
+  const a = list[i], b = list[j];
+  [a.order, b.order] = [b.order, a.order];
+  await persist(); render();
+}
+async function duplicateTo(p, platformId){
+  dupFor = null;
+  try{
+    const id = newId();
+    if(p.hasImage){
+      const img = await kvGet("img:" + p.id);
+      if(img) await kvSet("img:" + id, img);
+    }
+    posts.push({ ...p, id, platform: platformId, posted:false,
+      order: nextOrder(platformId), createdAt: Date.now() });
+    await persist();
+    toast("Copied to " + pById(platformId).label);
+  }catch(e){ toast("Duplication failed"); }
+  render();
+}
+async function confirmDelete(){
+  const p = deleting; deleting = null;
+  if(!p) return;
+  if(p.hasImage){ try{ await kvDel("img:" + p.id); }catch(e){} }
+  posts = posts.filter(x => x.id !== p.id);
+  await persist(); toast("Deleted"); render();
+}
+
+// ---------------- Backup / Restore ----------------
+async function doBackup(){
+  try{
+    const images = {};
+    for(const k of await kvKeys()){
+      if(String(k).startsWith("img:")) images[String(k).slice(4)] = await kvGet(k);
+    }
+    const data = { app:"contentos", version:1, exportedAt:new Date().toISOString(), posts, images };
+    const blob = new Blob([JSON.stringify(data)], { type:"application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const d = new Date(), pad = n => String(n).padStart(2,"0");
+    a.download = `contentos-backup-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast("Backup downloaded");
+  }catch(e){ toast("Backup failed"); }
+}
+async function doRestore(file){
+  try{
+    const data = JSON.parse(await file.text());
+    if(data.app !== "contentos" || !Array.isArray(data.posts)) throw 0;
+    // clear old images
+    for(const k of await kvKeys()){ if(String(k).startsWith("img:")) await kvDel(k); }
+    posts = data.posts;
+    for(const [id, url] of Object.entries(data.images || {})) await kvSet("img:" + id, url);
+    await persist();
+    toast("Backup restored");
+  }catch(e){ toast("That file isn't a valid backup"); }
+  render();
+}
+
+// ---------------- Render ----------------
+const $ = id => document.getElementById(id);
+
+function render(){
+  const activeColor = tab === "all" ? "var(--text)" : pById(tab).color;
+  $("titleAccent").style.color = activeColor;
+  const fab = $("fab");
+  fab.style.background = tab === "all" ? "#E8EAED" : pById(tab).color;
+  fab.style.boxShadow = `0 6px 24px ${tab === "all" ? "#E8EAED44" : pById(tab).color + "44"}`;
+
+  // chips
+  const openAll = posts.filter(p => !p.posted).length;
+  let chips = chipHtml("all", "All", "var(--text)", openAll, tab === "all");
+  for(const p of PLATFORMS){
+    const open = posts.filter(x => x.platform === p.id && !x.posted).length;
+    chips += chipHtml(p.id, p.label, p.color, open, tab === p.id);
+  }
+  $("chips").innerHTML = chips;
+  document.querySelectorAll("#chips .chip").forEach(el => {
+    el.onclick = () => { tab = el.dataset.id; kvSet("pref:tab", tab); render(); };
+  });
+
+  // hide toggle
+  const hb = $("hideBtn");
+  hb.textContent = hidePosted ? "✓ POSTED HIDDEN" : "HIDE POSTED";
+  hb.style.color = hidePosted ? "var(--ok)" : "var(--dim)";
+  hb.onclick = () => { hidePosted = !hidePosted; kvSet("pref:hidePosted", hidePosted ? "1" : "0"); render(); };
+
+  // list
+  let view = posts.filter(p => tab === "all" || p.platform === tab);
+  if(hidePosted) view = view.filter(p => !p.posted);
+  view = tab === "all"
+    ? [...view].sort((a,b) => {
+        const ad = a.date ? new Date(a.date+"T"+(a.time||"00:00")).getTime() : Infinity;
+        const bd = b.date ? new Date(b.date+"T"+(b.time||"00:00")).getTime() : Infinity;
+        return ad !== bd ? ad - bd : (a.order||0) - (b.order||0);
+      })
+    : [...view].sort((a,b) => (a.order||0) - (b.order||0));
+
+  $("count").textContent = `${view.length} ${view.length === 1 ? "post" : "posts"}`;
+
+  const wrap = $("listWrap");
+  if(view.length === 0){
+    wrap.innerHTML = `<div class="empty"><div class="glyph">⌁</div>
+      <div style="font-size:14px">The queue is empty.</div>
+      <div class="sub">Add your first post with the button below.</div></div>`;
+  }else{
+    wrap.innerHTML = `<div class="list">` + view.map((p, i) => cardHtml(p, i)).join("") + `</div>`;
+    view.forEach((p, i) => bindCard(p, i));
+  }
+  renderModals();
+}
+
+function chipHtml(id, label, color, count, active){
+  const style = active
+    ? `background:${color}1E; color:${color}; border-color:${color}77`
+    : "";
+  const cnt = active ? `background:${color}2A; color:${color}` : "";
+  return `<button class="chip" data-id="${id}" style="${style}">${esc(label)}
+    <span class="cnt" style="${cnt}">${count}</span></button>`;
+}
+
+function cardHtml(p, i){
+  const pf = pById(p.platform);
+  const when = fmtDate(p.date, p.time);
+  return `
+  <div class="card${p.posted ? " posted" : ""}" id="card-${p.id}" style="border-left:3px solid ${pf.color}">
+    <div class="top">
+      <span class="pfshort" style="color:${pf.color}">${pf.short}</span>
+      ${tab !== "all" ? `<span class="ord">#${i+1}</span>` : ""}
+      <span class="when${when ? "" : " q"}">${when || "in queue"}</span>
+      <button class="chk${p.posted ? " on" : ""}" data-act="posted" title="Mark as posted">${p.posted ? "✓" : ""}</button>
+    </div>
+    <div class="body">
+      <img class="thumb" data-img="${p.id}" style="display:none" alt="">
+      <div style="min-width:0; flex:1">
+        ${p.title ? `<div class="ptitle">${esc(p.title)}</div>` : ""}
+        <div class="pcap">${p.caption ? esc(p.caption) : `<span class="none">no text</span>`}</div>
+      </div>
+    </div>
+    <div class="actions" data-act="row">
+      <button class="btn" data-act="copytext">COPY</button>
+      ${p.hasImage ? `<button class="btn" data-act="copyimg">⧉ IMAGE</button>` : ""}
+      <button class="btn mut" data-act="dup">→ COPY TO</button>
+      ${tab !== "all" ? `<button class="btn mut" data-act="up">↑</button>
+      <button class="btn mut" data-act="down">↓</button>` : ""}
+      <div class="spacer"></div>
+      <button class="btn danger" data-act="del">✕</button>
+    </div>
+  </div>`;
+}
+
+function bindCard(p){
+  const el = $("card-" + p.id);
+  if(!el) return;
+  el.onclick = () => openEditor(p);
+  const stop = fn => e => { e.stopPropagation(); fn(); };
+  el.querySelector('[data-act="posted"]').onclick = stop(() => togglePosted(p));
+  el.querySelector('[data-act="row"]').onclick = e => e.stopPropagation();
+  el.querySelector('[data-act="copytext"]').onclick = () => copyText(p);
+  const ci = el.querySelector('[data-act="copyimg"]'); if(ci) ci.onclick = () => copyImage(p);
+  el.querySelector('[data-act="dup"]').onclick = () => { dupFor = p; renderModals(); };
+  const up = el.querySelector('[data-act="up"]'); if(up) up.onclick = () => move(p, -1);
+  const dn = el.querySelector('[data-act="down"]'); if(dn) dn.onclick = () => move(p, 1);
+  el.querySelector('[data-act="del"]').onclick = () => { deleting = p; renderModals(); };
+  if(p.hasImage){
+    kvGet("img:" + p.id).then(url => {
+      const img = el.querySelector('[data-img]');
+      if(url && img){ img.src = url; img.style.display = ""; }
+    });
+  }
+}
+
+// ---------------- Editor / modals ----------------
+async function openEditor(p){
+  if(p){
+    let img = null;
+    if(p.hasImage) img = await kvGet("img:" + p.id) || null;
+    editing = { ...p, _img: img, _imgChanged: false };
+  }else{
+    editing = { id:null, platform: tab === "all" ? "instagram" : tab, title:"", caption:"",
+      date:"", time:"", hasImage:false, _img:null, _imgChanged:false };
+  }
+  renderModals();
+}
+
+async function saveEditing(){
+  if(!editing) return;
+  try{
+    if(!editing.id){
+      const id = newId();
+      if(editing._img) await kvSet("img:" + id, editing._img);
+      posts.push({ id, platform: editing.platform, title: editing.title.trim(),
+        caption: editing.caption, date: editing.date, time: editing.time,
+        posted:false, order: nextOrder(editing.platform),
+        hasImage: !!editing._img, createdAt: Date.now() });
+    }else{
+      const p = posts.find(x => x.id === editing.id);
+      if(p){
+        if(editing._imgChanged){
+          if(editing._img){ await kvSet("img:" + p.id, editing._img); p.hasImage = true; }
+          else{ try{ await kvDel("img:" + p.id); }catch(e){} p.hasImage = false; }
+        }
+        p.platform = editing.platform; p.title = editing.title.trim();
+        p.caption = editing.caption; p.date = editing.date; p.time = editing.time;
+      }
+    }
+    await persist();
+    editing = null;
+    toast("Saved");
+  }catch(e){ toast("Save failed (image may be too large)"); }
+  render();
+}
+
+function renderModals(){
+  const m = $("modals");
+  if(editing){ m.innerHTML = editorHtml(); bindEditor(); }
+  else if(dupFor){ m.innerHTML = dupHtml(); bindDup(); }
+  else if(deleting){ m.innerHTML = delHtml(); bindDel(); }
+  else m.innerHTML = "";
+}
+
+function editorHtml(){
+  const e = editing;
+  const chips = PLATFORMS.map(p => {
+    const on = e.platform === p.id;
+    const st = on ? `background:${p.color}1E; color:${p.color}; border-color:${p.color}77` : "";
+    return `<button class="chip small" data-pf="${p.id}" style="${st}">${p.label}</button>`;
+  }).join("");
+  return `
+  <div class="overlay" id="ovEdit">
+    <div class="sheet">
+      <div class="shead">
+        <div class="stitle">${e.id ? "Edit post" : "New post"}</div>
+        <div class="spacer"></div>
+        <button class="btn mut" id="edClose">close</button>
+      </div>
+      <div class="label">Platform</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px" id="edPf">${chips}</div>
+
+      <div class="label">Title / hook</div>
+      <input class="inp tight" id="edTitle" placeholder="e.g. 3 mistakes when selling templates" value="${esc(e.title)}">
+      <div style="margin-bottom:14px"><button class="btn" id="edCopyTitle">[ COPY TITLE ]</button></div>
+
+      <div class="label">Caption / text</div>
+      <textarea class="inp tight" id="edCaption" rows="5" placeholder="Post text, hashtags…"
+        style="resize:vertical; line-height:1.45">${esc(e.caption)}</textarea>
+      <div style="margin-bottom:14px"><button class="btn" id="edCopyCaption">[ COPY CAPTION ]</button></div>
+
+      <div class="row">
+        <div style="flex:1">
+          <div class="label">Date</div>
+          <input class="inp" type="date" id="edDate" value="${e.date || ""}">
+        </div>
+        <div style="width:120px">
+          <div class="label">Time</div>
+          <input class="inp" type="time" id="edTime" value="${e.time || ""}">
+        </div>
+      </div>
+      <div class="hint" style="margin-top:-8px; margin-bottom:12px">
+        Leave empty → the post stays in the queue without a date.</div>
+
+      <div class="label">Image</div>
+      <div id="edImgZone" style="margin-bottom:14px"></div>
+
+      <button class="save" id="edSave" style="background:${pById(e.platform).color}">[ SAVE ]</button>
+    </div>
+  </div>`;
+}
+
+function bindEditor(){
+  const e = editing;
+  $("edClose").onclick = () => { editing = null; renderModals(); };
+  document.querySelectorAll("#edPf .chip").forEach(el => {
+    el.onclick = () => { e.platform = el.dataset.pf;
+      e.title = $("edTitle").value; e.caption = $("edCaption").value;
+      e.date = $("edDate").value; e.time = $("edTime").value;
+      renderModals(); };
+  });
+  $("edCopyTitle").onclick = () => copyField($("edTitle").value, "Title");
+  $("edCopyCaption").onclick = () => copyField($("edCaption").value, "Caption");
+
+  const zone = $("edImgZone");
+  function paintImg(){
+    if(e._img){
+      zone.innerHTML = `<div style="display:flex; gap:10px; align-items:center">
+        <img src="${e._img}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
+        <button class="btn danger" id="edImgRm" style="background:var(--card2)">remove</button></div>`;
+      $("edImgRm").onclick = () => { e._img = null; e._imgChanged = true; paintImg(); };
+    }else{
+      zone.innerHTML = `<button class="btn" id="edImgAdd">+ ADD IMAGE</button>
+        <input type="file" id="edImgFile" accept="image/*" style="display:none">
+        <div class="hint" style="margin-top:6px">Photos are compressed automatically.
+        Keep videos in your gallery and add a note in the caption.</div>`;
+      $("edImgAdd").onclick = () => $("edImgFile").click();
+      $("edImgFile").onchange = async ev => {
+        const f = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if(!f) return;
+        try{ e._img = await compressImage(f); e._imgChanged = true; paintImg(); }
+        catch(err){ toast("Couldn't load that image"); }
+      };
+    }
+  }
+  paintImg();
+
+  $("edSave").onclick = () => {
+    e.title = $("edTitle").value; e.caption = $("edCaption").value;
+    e.date = $("edDate").value; e.time = $("edTime").value;
+    saveEditing();
+  };
+}
+
+function dupHtml(){
+  const opts = PLATFORMS.filter(p => p.id !== dupFor.platform).map(p =>
+    `<button class="btn" data-pf="${p.id}" style="padding:12px 14px; font-size:14px;
+      border-left:3px solid ${p.color}; text-align:left">${p.label}</button>`).join("");
+  return `<div class="overlay" id="ovDup"><div class="sheet">
+    <div class="shead"><div class="stitle">Copy to</div><div class="spacer"></div>
+    <button class="btn mut" id="dupClose">close</button></div>
+    <div style="display:flex; flex-direction:column; gap:8px" id="dupOpts">${opts}</div>
+  </div></div>`;
+}
+function bindDup(){
+  $("ovDup").onclick = () => { dupFor = null; renderModals(); };
+  $("ovDup").querySelector(".sheet").onclick = e => e.stopPropagation();
+  $("dupClose").onclick = () => { dupFor = null; renderModals(); };
+  document.querySelectorAll("#dupOpts .btn").forEach(el => {
+    el.onclick = () => duplicateTo(dupFor, el.dataset.pf);
+  });
+}
+
+function delHtml(){
+  const p = deleting;
+  return `<div class="overlay" id="ovDel"><div class="sheet">
+    <div class="shead"><div class="stitle">Delete this post?</div><div class="spacer"></div>
+    <button class="btn mut" id="delClose">close</button></div>
+    <div style="font-size:13px; color:var(--mut); margin-bottom:16px">
+      ${p.title ? `"${esc(p.title)}"` : "This post"} will be removed permanently${p.hasImage ? ", including its image" : ""}.
+    </div>
+    <div class="row">
+      <button class="bigbtn" id="delYes" style="background:var(--danger); color:#fff">Delete</button>
+      <button class="bigbtn" id="delNo" style="background:var(--card2); color:var(--text);
+        border:1px solid var(--line)">Cancel</button>
+    </div>
+  </div></div>`;
+}
+function bindDel(){
+  $("ovDel").onclick = () => { deleting = null; renderModals(); };
+  $("ovDel").querySelector(".sheet").onclick = e => e.stopPropagation();
+  $("delClose").onclick = $("delNo").onclick = () => { deleting = null; renderModals(); };
+  $("delYes").onclick = confirmDelete;
+}
+
+// ---------------- Boot ----------------
+$("fab").onclick = () => openEditor(null);
+$("backupBtn").onclick = doBackup;
+$("restoreBtn").onclick = () => $("restoreFile").click();
+$("restoreFile").onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(f) doRestore(f);
+};
+
+loadState().then(render);
+
+// Offline support
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
